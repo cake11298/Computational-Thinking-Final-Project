@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Page</title>
+</head>
+<body>
+    <h1>Welcome to the Game</h1>
+    <form id="welcomeForm">
+        <input type="text" id="username" placeholder="Enter your name" required>
+        <input type="text" id="apiKey" placeholder="Enter your API Key" required>
+        <button type="submit">Start Game</button>
+    </form>
+
+    <script>
+        document.getElementById('welcomeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const apiKey = document.getElementById('apiKey').value;
+            localStorage.setItem('username', username);
+            localStorage.setItem('apiKey', apiKey);
+            window.location.href = 'game.html'; // 導向到 game.html
+        });
+    </script>
+</body>
+</html>

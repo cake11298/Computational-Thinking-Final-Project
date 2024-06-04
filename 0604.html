@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Game with ChatGPT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-image: url('your-background-image.jpg'); /* 確認圖片路徑正確 */
+            background-size: cover;
+            color: #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], button {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #555;
+            background-color: #222;
+            color: #ddd;
+            border-radius: 5px;
+            outline: none;
+            margin: 5px;
+        }
+
+        input[type="text"]:focus, button:focus {
+            border-color: dodgerblue;
+        }
+
+        button {
+            background-color: #555;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #777;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 70%;
+            height: 400px;
+            overflow-y: auto;
+            margin: 20px auto;
+            background-color: #222;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            color: #ccc;
+            text-align: left;
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Story Game</h1>
+    <form id="loginForm">
+        <input type="text" id="usernameInput" placeholder="Enter your name here..." required>
+        <button type="button" onclick="enterUsername()">Start Game</button>
+    </form>
+    <form id="messageForm" style="display:none;">
+        <input type="text" id="messageInput" placeholder="Type your message here..." required>
+        <button type="submit">Send</button>
+    </form>
+    <div id="messages"></div>
+    <script>
+        let username = ""; // 用於存儲使用者名稱
+
+        function enterUsername() {
+            username = document.getElementById('usernameInput').value;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('messageForm').style.display = 'flex';
+        }
+
+        document.getElementById('messageForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const userMessage = document.getElementById('messageInput').value;
+            if (!userMessage.trim()) return;
+            displayMessage(`${username}: ${userMessage}`);
+            // 您需要完成此處的 ChatGPT API 交互部分
+        });
+
+        function displayMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = message;
+            document.getElementById('messages').appendChild(messageElement);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+    </script>
+</body>
+</html>

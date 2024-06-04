@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Page</title>
+</head>
+<body>
+    <h1>Game Page</h1>
+    <div>
+        <p>Welcome, <span id="displayUsername"></span></p>
+        <!-- 更多遊戲內容 -->
+    </div>
+
+    <script>
+        window.onload = function() {
+            const username = localStorage.getItem('username');
+            const apiKey = localStorage.getItem('apiKey');
+            document.getElementById('displayUsername').textContent = username;
+            // 使用 apiKey 進行 API 呼叫等操作
+        };
+    </script>
+</body>
+</html>
