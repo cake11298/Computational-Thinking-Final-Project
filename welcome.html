@@ -1,26 +1,138 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome Page</title>
+    <title>Interactive Story Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #333; /* Dark background */
+            color: #ccc; /* Light text */
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 100vh; /* Full viewport height */
+            flex-direction: column; /* Stack children vertically */
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff; /* White text for headings */
+        }
+
+        #messageForm {
+            display: flex;
+            flex-direction: column;
+            width: 300px; /* 可以根據需要調整寬度 */
+            margin: 0 auto; /* 將表單置中 */
+            margin-bottom: 20px;
+        }
+
+        #messageForm input, #messageForm button {
+            margin-bottom: 10px; /* 元素之間的間距 */
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #555; /* Darker borders */
+            background-color: #222; /* Dark input fields */
+            color: #ddd; /* Light text */
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #messageInput:focus {
+            border-color: dodgerblue;
+        }
+
+        #messageInput::placeholder {
+            color: #777; /* Darker placeholder */
+        }
+
+        #messageInput:focus::placeholder {
+            color: transparent;
+        }
+
+        #sendMessageBtn {
+            padding: 10px 20px;
+            background-color: #555; /* Darker button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #sendMessageBtn:hover {
+            background-color: #777; /* Lighter on hover */
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 70%; /* Adjusted width to match input */
+            height: 400px;
+            overflow-y: auto;
+            margin: 20px auto; /* Centering messages */
+            background-color: #222; /* Dark background for messages */
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            color: #ccc; /* Light text for messages */
+        }
+
+        .userMessage {
+            background-color: #444; /* Darker user message */
+            text-align: right;
+        }
+
+        .botMessage {
+            background-color: #555; /* Darker bot message */
+            text-align: left;
+        }
+
+        #introImage {
+            width: 50%; /* Full width */
+            height: 1000px; /* Fixed height, adjust as needed */
+            background: url('Dragon.png') no-repeat center center; /* Replace 'Dragon.png' with your image path */
+            background-size: cover;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;    
+            align-items: center;      
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Game</h1>
-    <form id="welcomeForm">
-        <input type="text" id="username" placeholder="Enter your name" required>
-        <input type="text" id="apiKey" placeholder="Enter your API Key" required>
-        <button type="submit">Start Game</button>
+    <h1>Interactive Story Game</h1>
+    <div id="introImage"></div>
+    <form id="messageForm">
+        <input type="text" id="nameInput" placeholder="請輸入您的名稱..." required>
+        <input type="text" id="apiInput" placeholder="請輸入你的ChatGPT API..." required>
+        <button id="sendMessageBtn" type="submit">Send</button>
     </form>
-
     <script>
-        document.getElementById('welcomeForm').addEventListener('submit', function(event) {
+        document.getElementById('messageForm').addEventListener('submit', function (event) {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            const apiKey = document.getElementById('apiKey').value;
-            localStorage.setItem('username', username);
-            localStorage.setItem('apiKey', apiKey);
-            window.location.href = 'game.html'; // 導向到 game.html
+            const name = document.getElementById('nameInput').value;
+            const api = document.getElementById('apiInput').value;
+
+            if (!name.trim() || !api.trim()) return;
+
+            // Save the data to localStorage
+            localStorage.setItem('userName', name);
+            localStorage.setItem('apiKey', api);
+
+            // Redirect to game.html
+            window.location.href = 'game.html';
         });
     </script>
 </body>
