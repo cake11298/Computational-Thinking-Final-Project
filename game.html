@@ -97,11 +97,12 @@
         .assistantMessage {
             background-color: #555; /* Darker bot message */
             text-align: left;
+            color: yellow; /* Change to yellow text */
         }
 
         #introImage {
             width: 50%; /* Full width */
-            height: 1000px; /* Fixed height, adjust as needed */
+            height: 1500px; /* Fixed height, adjust as needed */
             background: url('Dragon.png') no-repeat center center; /* Replace 'Dragon.png' with your image path */
             background-size: cover;
             margin-bottom: 20px;
@@ -109,10 +110,22 @@
             justify-content: center;
             align-items: center;
         }
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            z-index: 9999;
+            color: #fff;
+            user-select: none;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
-    <h1>Interactive Story Game</h1>
+    <audio id="sceneMusic" hidden>
+        Your browser does not support the audio element.
+    </audio>
+    <h1>魔法學院 - 冒險遊戲</h1>
     <div id="introImage"></div> <!-- Image above the form -->
     <form id="messageForm">
         <input type="text" id="messageInput" placeholder="Type your message here..." required>
@@ -120,46 +133,42 @@
     </form>
     <div id="messages"></div>
     <script>
-        // Get the user name and API key from localStorage
+        // 從 localStorage 中獲取用戶名和 API 密鑰
         const userName = localStorage.getItem('userName');
         const apiKey = localStorage.getItem('apiKey');
-
+    
         if (!apiKey) {
-            console.error('API key not found in localStorage');
+            console.error('localStorage 中找不到 API 密鑰');
+            displayMessage("API 密鑰未找到。請返回起始頁面輸入你的 API 密鑰。", "assistant");
         }
-
-        // Display a welcome message
-        const welcomeMessage = `Welcome, ${userName}!`;
-        displayMessage(welcomeMessage, "assistant");
-
+    
         const endpoint = "https://api.openai.com/v1/chat/completions";
         let conversationMemory = [];
-
+    
         document.getElementById('messageForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const userMessage = document.getElementById('messageInput').value;
             if (!userMessage.trim()) return;
             displayMessage(userMessage, userName);
             conversationMemory.push({ role: "user", content: userMessage });
-            fetchChatGPTResponse();
+            displayTypingIndicator();
+            setTimeout(() => {
+                fetchChatGPTResponse();
+            }, 2000); // 模擬打字延遲
             document.getElementById('messageInput').value = '';
         });
-
+    
         function fetchChatGPTResponse() {
-            // Get the API key from localStorage for each request
-            const apiKey = localStorage.getItem('apiKey');
-
             if (!apiKey) {
-                console.error('API key not found in localStorage during fetchChatGPTResponse');
-                displayMessage("API key not found. Please go back to the welcome page and enter your API key.", "assistant");
+                console.error('localStorage 中找不到 API 密鑰');
                 return;
             }
-
+    
             const requestData = {
-                model: "gpt-4",
+                model: "gpt-3.5-turbo",
                 messages: conversationMemory
             };
-
+    
             fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -170,34 +179,189 @@
             }).then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    console.error('Error from API:', data.error);
-                    displayMessage(`Error from API: ${data.error.message}`, "assistant");
+                    console.error('來自 API 的錯誤:', data.error);
+                    displayMessage(`API 返回錯誤: ${data.error.message}`, "assistant");
                     return;
                 }
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                if (data.choices && data.choices.length > 0) {
                     const assistantMessage = data.choices[0].message.content;
                     displayMessage(assistantMessage, "assistant");
                     conversationMemory.push({ role: "assistant", content: assistantMessage });
                 }
             }).catch(error => {
-                console.error('Fetch error:', error);
-                displayMessage("Failed to get response from the assistant.", "assistant");
+                console.error('獲取 API 數據失敗:', error);
+                displayMessage("獲取助理回應失敗。", "assistant");
             });
         }
-
+    
+        document.addEventListener('DOMContentLoaded', function () {
+            const scriptContent = document.getElementById('gameScript').textContent;
+            conversationMemory.push({ role: "system", content: scriptContent });
+            displayTypingIndicator();
+            setTimeout(() => {
+                fetchChatGPTResponse();
+            }, 2000); // 在模擬打字延遲後開始對話
+        });
+    
+        // 修改現有的 displayMessage 函數以包含對 changeScene 函數的調用
         function displayMessage(message, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
-            if (sender === userName) {
-                messageElement.classList.add('userMessage');
-                messageElement.textContent = `${sender}: ${message}`;
-            } else {
+            if (sender === "assistant") {
                 messageElement.classList.add('assistantMessage');
-                messageElement.textContent = `系統劇情: ${message}`;
+                messageElement.innerHTML = '';
+                document.getElementById('messages').appendChild(messageElement);
+                changeScene(message); // 調用 changeScene 函數更新場景
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < message.length) {
+                        messageElement.innerHTML += message[i] === '\n' ? '<br>' : message[i];
+                        if (message[i] === '<' && message.substring(i).startsWith('<場景>')) {
+                            // 假設場景描述在 '<場景>' 標籤內，並且結束於下一個標點符號
+                            let end = message.indexOf('。', i + 1);
+                            if (end === -1) end = message.length;
+                            const sceneDescription = message.substring(i + 4, end);
+                            // changeScene(sceneDescription); // 調用 changeScene 函數更新場景
+                        }
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 30);
+            } else {
+                messageElement.classList.add('userMessage');
+                messageElement.textContent = `${userName}: ${message}`;
+                document.getElementById('messages').appendChild(messageElement);
             }
-            document.getElementById('messages').appendChild(messageElement);
+
+            // 自動滾動到消息容器底部
             document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
+
+        function changeScene(sceneDescription) {
+            const musicPlayer = document.getElementById('sceneMusic');
+            console.log(sceneDescription);
+            if (sceneDescription.includes("入學") || sceneDescription.includes("麥吉爾") ) {
+                document.getElementById('introImage').style.backgroundImage = "url('introduce.png')";
+                musicPlayer.src = 'introduce.mp3'; // 更換音樂路徑
+                musicPlayer.play(); // 播放音樂
+                console.log("play introduce music checked.")
+            } else if (sceneDescription.includes("實驗室") || sceneDescription.includes("魔法課")) {
+                document.getElementById('introImage').style.backgroundImage = "url('lab.png')";
+                musicPlayer.src = 'lab.mp3';
+                musicPlayer.play();
+            } else if (sceneDescription.includes("森林")) {
+                document.getElementById('introImage').style.backgroundImage = "url('forest.png')";
+                musicPlayer.src = 'lab.mp3';
+                musicPlayer.play();
+            } else if (sceneDescription.includes("競技場")) {
+                document.getElementById('introImage').style.backgroundImage = "url('competition.png')";
+                musicPlayer.src = 'lab.mp3';
+                musicPlayer.play();
+            } else if (sceneDescription.includes("結束")) {
+                document.getElementById('introImage').style.backgroundImage = "url('gameover.png')";
+                musicPlayer.src = 'lab.mp3';
+                musicPlayer.play();
+            } 
+            // 可以繼續添加更多場景和對應的音樂
+        }
+    
+        function displayTypingIndicator() {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('message', 'assistantMessage');
+            typingIndicator.textContent = '系統正在輸入...';
+            document.getElementById('messages').appendChild(typingIndicator);
+            setTimeout(() => {
+                document.getElementById('messages').removeChild(typingIndicator);
+            }, 2000); // 顯示打字指示器模擬延遲
+        }
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            snowflake.textContent = '❄';
+            snowflake.style.fontSize = Math.random() * 20 + 10 + 'px';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.left = Math.random() * window.innerWidth + 'px';
+            document.body.appendChild(snowflake);
+
+            // 讓雪花落下
+            snowflake.animate([
+                { transform: 'translateY(0px)' },
+                { transform: `translateY(${window.innerHeight + 100}px)` }
+            ], {
+                duration: Math.random() * 3000 + 3000,
+                easing: 'linear',
+                iterations: 1
+            }).onfinish = function() {
+                snowflake.remove();
+            };
+        }
+
+        setInterval(createSnowflake, 200);
+
+    </script>    
+    
+
+    <script type="text/plain" id="gameScript">
+        腳本：
+        """遊戲標題：麥吉爾魔法學院
+        遊戲背景
+        主角：你是一名來自台灣的學生，被選中在麥吉爾大學的秘密魔法部門學習。
+        其他角色：
+        
+        艾瑪：魔法學院的導師，專精於元素魔法。
+        詹姆斯：冒險心很重的學生，擅長咒語和符咒。
+        遊戲腳本流程（你需要先跟玩家說明 故事背景）
+        
+        第1幕
+        開場：
+        （場景：麥吉爾魔法學院入學典禮）
+        艾瑪介紹學院的歷史和魔法學習的重要性。
+        選擇A：詢問更多關於元素魔法的信息。 （如果選擇這個就跳轉到第2幕）
+        選擇B：詢問關於幻影魔法的信息。（如果選擇這個就跳轉到第3幕）
+        
+        第一堂魔法課：
+        （場景：魔法實驗室）
+        第2幕
+        魔法實驗室 艾瑪教授基本的元素魔法技巧。
+         選擇A1：練習火焰咒語。
+         選擇A2：練習水流操控。
+        結束後轉跳到魔法森林（第4幕）
+        
+        第3幕
+        魔法實驗室 詹姆斯展示如何創造簡單的幻象。
+         選擇B1：嘗試創造視覺幻象。
+         選擇B2：嘗試操控聲音幻象。
+        結束後轉跳到魔法森林（第4幕）
+
+        第4幕
+        魔法應用實戰：
+        （場景：魔法森林）
+        你和同學們進行戶外魔法訓練，運用所學對抗魔法生物。
+        選擇A：使用元素魔法進行防衛。
+        選擇B：使用幻影魔法迷惑對手。
+        結束後轉跳制巫師晉級賽（第5幕）
+        
+        第5幕
+        巫師資格晉級賽：
+        （場景：大魔法競技場）
+        你參加學院年度的巫師晉級賽，展示其魔法技巧。
+         選擇A：選擇以元素魔法進行比賽。
+         選擇B：選擇以幻影魔法進行比賽。
+
+        第6幕
+        遊戲結束：
+        感謝玩家的參與
+
+        結局：
+        根據李明在晉級賽中的表現和所作的選擇，遊戲將展示他在魔法學院的成長和成就。每個選擇都會影響他的魔法能力的發展和同學們的關係。
+        
+        請根據腳本中的對話，根據"""開場"""到"""魔法課程"""最後到"""晉級賽"""進行，開始一個文字冒險遊戲，每一次的對話，都需要呈現以下格式與資訊：
+        <場景>：目前故事的背景為何
+        <選擇>：在每一次的對話中，你都會根據腳本給我可以選擇的動作，根據我選擇的動作繼續接下來的劇情，整體劇情會圍繞腳本發展。
+        
+        根據我的選擇進行故事就好，不要幫我做出選擇，但要提供我選項，你必須要寫出完整正確的場景名稱不可自行修改，不要一次把劇情全部顯示出來。
     </script>
+
 </body>
 </html>
